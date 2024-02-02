@@ -3,8 +3,7 @@ import pandas as pd
 import scipy.stats as stats
 
 # Load the dataset
-absolute_path = os.path.abspath(__file__)
-file_path = os.path.dirname(absolute_path) + "/data_fin_perf.csv"
+file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data_fin_perf.csv")
 data = pd.read_csv(file_path)
 
 # Filter out irrelevant index
@@ -18,12 +17,18 @@ data_others = data_filtered[~data_filtered['ticker'].isin(['ALV.DE', 'TTE.PA'])]
 # Function to perform t-tests
 def perform_ttests(data1, data2):
     ttest_results = {}
-    for metric in ['ROE (%)', 'Net Profit Margin (%)', 'Revenue Growth (%)']:
-        if data1[metric].notnull().sum() > 1 and data2[metric].notnull().sum() > 1:
-            t_stat, p_value = stats.ttest_ind(data1[metric].dropna(), data2[metric].dropna(), equal_var=False)
+    metrics_to_test = ['ROE (%)', 'Net Profit Margin (%)', 'Revenue Growth (%)']
+    
+    for metric in metrics_to_test:
+        data1_metric = data1[metric].dropna()
+        data2_metric = data2[metric].dropna()
+        
+        if len(data1_metric) > 1 and len(data2_metric) > 1:
+            t_stat, p_value = stats.ttest_ind(data1_metric, data2_metric, equal_var=False)
             ttest_results[metric] = {'t_stat': t_stat, 'p_value': p_value}
         else:
             ttest_results[metric] = {'t_stat': 'insufficient data', 'p_value': 'insufficient data'}
+    
     return ttest_results
 
 # Perform t-tests for ALV.DE and TTE.PA against others
